@@ -1,0 +1,135 @@
+Listen 443
+
+# prefork MPM
+# StartServers: number of server processes to start
+# MinSpareServers: minimum number of server processes which are kept spare
+# MaxSpareServers: maximum number of server processes which are kept spare
+# ServerLimit: maximum value for MaxClients for the lifetime of the server
+# MaxClients: maximum number of server processes allowed to start
+# MaxRequestsPerChild: maximum number of requests a server process serves
+<IfModule prefork.c>
+StartServers       8
+MinSpareServers    5
+MaxSpareServers   20
+ServerLimit      256
+MaxRequestWorkers       256
+MaxConnectionsPerChild  4000
+</IfModule>
+
+# worker MPM
+# StartServers: initial number of server processes to start
+# MaxClients: maximum number of simultaneous client connections
+# MinSpareThreads: minimum number of worker threads which are kept spare
+# MaxSpareThreads: maximum number of worker threads which are kept spare
+# ThreadsPerChild: constant number of worker threads in each server process
+# MaxRequestsPerChild: maximum number of requests a server process serves
+<IfModule worker.c>
+StartServers        5
+MaxRequestWorkers         150
+MinSpareThreads     25
+MaxSpareThreads     75
+ThreadsPerChild     25
+MaxConnectionsPerChild 1000
+</IfModule>
+
+#<Directory "/opt/webfiles/clientcentral/htdocs">
+
+<Directory "/var/www/html">
+    Options -FollowSymLinks -Includes -Indexes -MultiViews
+    <LimitExcept GET POST>
+       deny from all
+    </limitexcept>
+     AllowOverride None
+   Require all granted
+</Directory>
+
+
+DefaultType text/plain
+HostnameLookups Off
+ServerSignature Off
+
+ TraceEnable off
+ Header unset ETag
+ FileETag None
+
+
+<IfModule mod_headers.c>
+ Header edit Set-Cookie ^(.*)$ $1;Secure;HttpOnly
+ Header unset "X-Powered-By"
+ Header set  X-FRAME-OPTIONS SAMEORIGIN
+ Header edit Location ^(.*);jsessionid=(.*)$ $1
+ Header set X-UA-Compatible "IE=EmulateIE9"
+ 
+ X-Frame-Options: Header always append X-Frame-Options SAMEORIGIN
+ X-XSS-Protection: Header always set X-XSS-Protection "1; mode=block"
+ X-Content-Type-Options: Header always set X-Content-Type-Options nosniff
+ 
+</IfModule>
+
+RewriteEngine on
+RewriteCond %{HTTP:range} !(^bytes=[^,]+(,[^,]+){0,4}$|^$) [NC]
+RewriteRule .* - [F]
+
+
+#Apache Module mod_remoteip
+RemoteIPHeader x-forwarded-for
+ProxyErrorOverride on
+
+ErrorDocument 400 /errors/error400.html
+ErrorDocument 401 /errors/error401.html
+ErrorDocument 403 /errors/error403.html
+ErrorDocument 404 /errors/error404.html
+ErrorDocument 408 /errors/error408.html
+
+ErrorDocument 500 /errors/error500.html
+ErrorDocument 502 /errors/error502.html
+ErrorDocument 503 /errors/error503.html
+ErrorDocument 504 /errors/error504.html
+
+AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript application/rss+xml text/xml image/svg+xml
+
+
+
+
+#Virtual Host Configuration on Port 443
+<VirtualHost llppaccsvn04.onefiserv.net:443>
+       # DirectoryIndex .html
+        DocumentRoot /var/www/html
+        ServerName  cs-svn-prod-lv.onefiserv.net
+
+    SSLEngine on
+    #TLSv1.2 (when using OpenSSL 1.0.1 and later)
+    SSLProtocol +TLSv1.2
+    SSLHonorCipherOrder On
+    SSLCipherSuite AES256:AES128:!DH:!ECDH:!PSK
+
+    SSLCertificateFile /ql/apache/certs/ssl.crt/llppaccsvn.onefiserv.net.cert
+    SSLCertificateKeyFile /ql/apache/certs/ssl.key/llppaccsvn.onefiserv.net.key
+
+
+    # add server-status and server-info
+    <Location "/server-status">
+       SetHandler server-status
+       Require ip 10 127
+    </Location>
+   <Location "/server-info">
+        SetHandler server-info
+        Require ip 10 127
+  </Location>
+
+   LogLevel info
+    ErrorLog "|/usr/sbin/rotatelogs -l -f /ql/logs/apache/cwsi/ws/llppaccsvn04/error_log.%Y.%m.%d 50M"
+    <IfModule log_config_module>
+        LogFormat "%h %{x-forwarded-for}i %l %{remote_user}i %t \"%r\" %>s %b %D \
+        \"%{Referer}i\" \"%{User-Agent}i\""                     combined
+
+        LogFormat "%h %l %u %t \"%r\" %>s %b" common
+        LogFormat "%{Referer}i -> %U" referer
+        LogFormat "%{User-agent}i" agent
+
+       CustomLog "|/usr/sbin/rotatelogs -l -f /ql/logs/apache/cwsi/ws/llppaccsvn04/access_log.%Y.%m.%d 50M" combined
+    </IfModule>
+        Header edit Location "^http:(.*)$" "https:$1"
+</VirtualHost>
+
+
