@@ -1,0 +1,101 @@
+
+
+
+#!/bin/sh 
+#==============================Ved
+#1. Date
+#2. Hostname
+#3. IP address
+#4. Subscription
+#5. Yum update
+#6. YUM history
+#7. Security Updates
+#9. df -hT
+#10. ps -ef |grep -i httpd
+#11. netstat -pant |grep httpd
+#12. Apache server status
+#13. Apache instance and service name
+#14. Apache logs
+#15. Arcsight configuration
+#16. sysedge log
+# ==========================================
+cp -pvf /etc/hosts /etc/hosts_bak
+
+
+echo -e " \n ----------------------------- \n"
+date
+echo -e " \n ----------------------------- \n"
+
+echo -e " ------- Hostname-- \n"
+hostname
+
+
+echo -e "\n ----------------------------- \n"
+echo -e " ip address - ip a \n"
+ip a 
+
+echo -e " \n ----------------------------- \n"
+echo -e " RHN Subscription - subscription-manager list \n  "
+subscription-manager list
+
+echo -e " \n ----------------------------- \n"
+echo -e " Kernel Version - uname -a  " 
+uname -a 
+
+echo -e " \n ----------------------------- \n"
+echo -e " Yum update -  yum update "
+yum update
+
+echo -e " \n ----------------------------- \n"
+echo -e " yum history - yum history list"
+yum history list
+
+echo -e " \n ----------------------------- \n"
+echo -e " Filesystem mounted - df -hT"
+df -hT
+
+echo -e " \n ----------------------------- \n"
+echo -e " Apache server running - ps -ef |grep -i http"
+ps -ef |grep -i http
+
+echo -e " \n ----------------------------- \n"
+echo -e " Check apache instance is running - service validateaws status "
+service FISV_httpd_cwsi_ws status
+
+echo -e " \n ----------------------------- \n"
+echo -e " Check apache instance ports - netstat -pant |grep -i http  "
+netstat -pant |grep -i httpd 
+
+
+echo -e " \n ----------------------------- \n"
+echo -e " Check logs written  - tail -n 30 /ql/apache/ebillsvc/logs/validate/ssl/*_error_log."
+ egrep -i log /ql/apache/cwsi/ws/conf/vhconf/*.conf
+ 
+ echo -e "\n /var/log/httpd/error_log /n"
+ 
+ tail -n 30 /var/log/httpd/error_log
+ 
+ echo -e "\n /var/log/httpd/custom_log \n"
+ tail -n 30 /var/log/httpd/custom_log
+
+ echo -e " \n ----------------------------- \n"
+echo -e " Arcsight configuration - cat /etc/rsyslog.conf |grep 10 "
+cat /etc/rsyslog.conf |grep 10
+
+echo -e " \n ----------------------------- \n"
+echo -e " Apache Configuration "
+for i in ` ls /ql/apache/cwsi/ws/conf/vhconf/*.conf`
+ do
+   echo $i
+
+echo -e " \n ----------------------------- \n"
+  echo -e " logs Files are - cat $i |egrep -i 'errorlog|customlog' |awk -F' ' '{print $3}'"
+   cat $i |egrep -i 'errorlog|customlog' |awk -F' ' '{print $3}'
+
+
+echo -e " \n ----------------------------- \n"
+  #echo -e "Time stamp of log files"
+  #  tail -n 10 $(cat $i |egrep -i 'errorlog|customlog' |awk -F' ' '{print $3}')
+
+ done
+exit
