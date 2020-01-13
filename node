@@ -1,0 +1,7 @@
+   <domain-controller>
+     <remote username="admin" security-realm="ManagementRealm">
+        <discovery-options>
+            <static-discovery name="primary" protocol="${jboss.domain.master.protocol:remote}" host="${jboss.domain.master.address:192.168.56.101}" port="${jboss.domain.master.port:9999}"/>
+        </discovery-options>
+    </remote>
+    </domain-controller>
