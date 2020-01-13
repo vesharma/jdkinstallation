@@ -1,0 +1,100 @@
+
+            <native-interface security-realm="ManagementRealm">
+                <socket interface="management" port="${jboss.management.native.port:9999}"/>
+            </native-interface>
+
+WebApplication1
+<secret value="WVNnNENuTEAy" />
+
+PR171368 Lean Adjustment Hub
+Username - admin
+Password - YSg4CnL@2
+
+<server-identities>
+   <secret value="WVNnNENuTEAy"/>
+<server-identities>
+
+<secret value="WVNnNENuTEAy" />
+
+/ql/java/jdk1.8.0_221/bin/keytool -genkey -alias server   -keyalg RSA -storepass password -keystore application.keystore -validity 1028
+
+
+1.	Command Line:  
+a.	Connect to controller:
+i.	./jboss-cli.sh --connect --controller=10.35.147.134:9990 
+b.	Apply 1st patch:
+i.	patch apply /ql/jboss-eap-7.1.1-patch.zip --host=elbp3csosjba01-dc
+c.	restart JBOSS:  
+i.	shutdown --restart=true --host=elbp3csosjba01-dc 
+d.	.Connect to controller again:
+i.	/jboss-cli.sh --connect --controller=10.35.147.134:9990 
+e.	Apply second patch:
+i.	patch apply /ql/jboss-eap-7.1.2-patch.zip --host=elbp3csosjba01-dc
+a.	Restart JBOSS:
+a.	restart JBOSS:  shutdown --restart=true --host=elbp3csosjba01-dc 
+b.	Verify that JBOSS comes back down.
+
+
+
+firewall-cmd --zone=public --permanent --add-port=8080/tcp
+firewall-cmd --zone=public --permanent --add-port=8230/tcp
+firewall-cmd --zone=public --permanent --add-port=8443/tcp
+firewall-cmd --zone=public --permanent --add-port=9990/tcp
+firewall-cmd --zone=public --permanent --add-port=9999/tcp
+firewall-cmd --reload
+
+-bash-4.2$ cd /opt/jboss7.2/bin/
+-bash-4.2$ ./jboss-cli.sh
+You are disconnected at the moment. Type 'connect' to connect to the server or 'help' for the list of supported commands.
+[disconnected /] connect elapzhubjbs06:9990
+[domain@elapzhubjbs06:9990 /] d
+data-source  deploy  deployment  deployment-info  deployment-overlay
+[domain@elapzhubjbs06:9990 /] deploy ../
+.galleon           adjhub-fiserv.war  docs               JBossEULA.txt      modules            welcome-content
+.installation      appclient          domain             LICENSE.txt        standalone
+.well-known        bin                jboss-modules.jar  migration          version.txt
+[domain@elapzhubjbs06:9990 /] deploy ../adjhub-fiserv.war --server-groups=main-server-group
+[domain@elapzhubjbs06:9990 /]
+
+
+
+/root/jboss-eap-7.2.0.zip
+/root/jboss-eap-7.2.5-patch.zip
+
+ vi /ql/EAP-7.2.1/bin/stop-jb.sh
+
+!#/bin/sh
+kill -9 `ps -ef |grep -i java |grep -i 'Controller' |awk -F ' ' '{print $2}'`;
+ps -ef |grep -i java |grep -i 'Controller' |awk -F ' ' '{print $2}';
+ ps -ef |grep -i java |grep -i 'Controller';
+ps -ef |grep -i java
+
+chmod +x /ql/EAP-7.2.1/bin/stop-jb.sh
+chown svc-lean.svc-leangrp /ql/EAP-7.2.1/bin/stop-jb.sh
+ll /ql/EAP-7.2.1/bin/stop-jb.sh
+
+
+chmod -R 775 /ql/EAP-7.2.1 ; chown -R svc-lean.svc-leangrp /ql/EAP-7.2.1
+
+
+
+http://10.31.231.243:8230/adjhub-fiserv/
+
+nohup  /ql/EAP-7.2.1/bin/domain.sh -b 10.31.211.222 -b 10.31.211.222 -D10.31.229.53 &
+
+
+/ql/EAP-7.2.1/bin/domain.sh -b 10.31.231.243 -b 10.31.231.243 -D10.31.229.53
+
+/ql/EAP-7.2.1/bin/domain.sh -b 10.31.211.222 -b 10.31.211.222 -D10.31.229.53
+
+
+
+/ql/EAP-7.2.1/bin/domain.sh -b 10.31.230.129 -b 10.31.230.129
+
+
+10.31.231.244
+
+/ql/EAP-7.2.1/bin/domain.sh -b 10.31.231.244 -b 10.31.231.244 -D10.31.230.129
+
+/ql/EAP-7.2.1/bin/domain.sh -b 10.31.211.223 -b 10.31.211.223 -D10.31.230.129
+
