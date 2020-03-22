@@ -1,0 +1,1 @@
+sudo -u jboss ./domain.sh -Djboss.domain.base.dir=/ql/EAP-7.2.1 -Djboss.domain.master.address=192.168.83.129 --host-config=host.xml
