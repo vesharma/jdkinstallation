@@ -1,0 +1,25 @@
+---
+  - name: check
+    hosts: all
+    become: true
+    gather_facts: false
+    tasks:
+
+    - name: print a message
+      command:  java -version 2>&1 | grep version | awk '{print $3}' | sed 's/"//g'
+      register: version
+      ignore_errors: True
+
+    - name: print java version
+      debug:
+         msg:  " {{ version i}} "
+      when: " version.rc == 0 "
+
+    - name: install java version
+      command: "{{ item }}"
+      when: "version.rc !=0"
+      with_items:
+        - alternatives --install /usr/sbin/java java  /ql/java/jdk1.8.0_152/bin/java 1000
+
+
+https://www.decodingdevops.com/ansible-when-condition-examples-with-rc/
