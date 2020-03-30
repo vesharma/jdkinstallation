@@ -1,0 +1,49 @@
+---
+  - name: jboss installation
+    hosts: all
+    become: true
+    tasks:
+
+    - name: copy the file from /root/ to /ql
+      copy:
+        src: /root/jboss-eap-7.2.0.zip
+        dest: /ql/
+
+    - name: unzip should be install on server
+      yum:
+        name: unzip
+        state: present
+
+    - name: Create directory
+      file:
+        dest: /ql/EAP-7.2.0
+        state: directory
+        mode: "u=rw,g=wx,o=rwx"
+        recurse: yes
+
+    - name: extract the file
+      unarchive:
+        src: /root/jboss-eap-7.2.0.zip
+        dest: /ql/EAP-7.2.0
+        remote_src: yes
+        #extra_opts: [--strip-components=1]
+
+      #- name: Plan of action
+      # copy the host.xml host.xml_date
+      # copy domain.xml domain.xml_date
+      # add interface line in host.xml
+      # run adduser.sh
+      # add domain controller line for remote user
+      # replace public and private interface
+      # add server group
+      # add server in it
+
+    - name: Copy the host and domain.xml file
+      copy:
+         src: "{{ item.src }}"
+         dest: "{{ item.dest }}"
+      with_items:
+       - { src: '/ql/EAP-7.2.0/jboss-eap-7.2/domain/configuration/host.xml', dest: '/ql/EAP-7.2.0/jboss-eap-7.2/domain/configuration/host.xml_org_bak' }
+       - { src: '/ql/EAP-7.2.0/jboss-eap-7.2/domain/configuration/domain.xml' , dest: '/ql/EAP-7.2.0/jboss-eap-7.2/domain/configuration/domain.xml_org_bak' }
+
+
