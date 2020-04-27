@@ -1,0 +1,50 @@
+
+keytool -genkeypair -alias appserver -storetype jks -keyalg RSA -keysize 2048 -keypass password1 -keystore /ql/DomainController_Eap7.2/domain/configuration/identity.jks -storepass password1 -dname "CN=appserver,OU=Sales,O=Systems Inc,L=Raleigh,ST=NC,C=US" -validity 730 -v
+
+/host=master/core-service=management/management-interface=http-interface:write-attribute(name=secure-port,value=9443)
+/host=master/core-service=management/management-interface=http-interface:undefine-attribute(name=port)
+
+host.xml
+
+     16                 <authorization map-groups-to-roles="false">
+     17                     <properties path="mgmt-groups.properties" relative-to="jboss.domain.config.dir"/>
+     18                 </authorization>
+     19                 <server-identities>
+     20                     <ssl>
+     21                         <keystore path="identity.jks" relative-to="jboss.domain.config.dir" keystore-password="password1" alias="appserver" key-password="passwo        rd1"/>
+     22                     </ssl>
+     23                 </server-identities>
+     24
+     25             </security-realm>
+     26             <security-realm name="ApplicationRealm">
+
+
+
+   60         <management-interfaces>
+     61             <http-interface security-realm="ManagementRealm">
+     62                 <http-upgrade enabled="true"/>
+     63                 <socket interface="management" secure-port="9443"/>
+     64             </http-interface>
+     65         </management-interfaces>
+     
+     Compare domain.xml
+       389             </subsystem>
+    390             <subsystem xmlns="urn:jboss:domain:undertow:7.0" default-server="default-server" default-virtual-host="default-host" default-servlet-container="defa        ult" default-security-domain="other">
+    391                 <buffer-cache name="default"/>
+    392                 <server name="default-server">
+    393                     <http-listener name="default" socket-binding="http" redirect-socket="https" enable-http2="true"/>
+    394                     <https-listener name="https" socket-binding="https" security-realm="ApplicationRealm" enable-http2="true"/>
+    395                     <host name="default-host" alias="localhost">
+    396                         <location name="/" handler="welcome-content"/>
+    397                         <http-invoker security-realm="ApplicationRealm"/>
+    398                     </host>
+    399                 </server>
+    400                 <servlet-container name="default">
+    401                     <jsp-config/>
+    402                     <websockets/>
+    403                 </servlet-container>
+    404                 <handlers>
+    405                     <file name="welcome-content" path="${jboss.home.dir}/welcome-content"/>
+    406                 </handlers>
+    407             </subsystem>
+
