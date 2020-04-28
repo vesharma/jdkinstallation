@@ -1,0 +1,76 @@
+https://access.redhat.com/solutions/350683
+JBoss-EAP-6
+standalone
+├── configuration
+│   ├── standalone-test1.xml
+│   └── standalone-test2.xml
+├── data
+├── deployments
+│   ├── test1.war
+│   └── test2.war
+├── log
+│   ├── test1
+│   │   └── server.log
+│   └── test2
+│       └── server.log
+└── tmp
+
+
+ZIP Installation
+Copy standalone directory. For example, to node1 and node2 like:
+
+Raw
+$ cp  -a  $JBOSS_HOME/standalone $JBOSS_HOME/node1
+$ cp  -a  $JBOSS_HOME/standalone $JBOSS_HOME/node2
+Start each instance, using the start up scripts in $JBOSS_HOME/bin, by specifying the node name, IP address and server directory:
+
+node1 startup:
+
+Raw
+$ ./bin/standalone.sh -Djboss.node.name=node1 -Djboss.server.base.dir=$JBOSS_HOME/node1 -c standalone.xml  -b 192.0.2.10 -bmanagement 192.0.2.10
+node2 startup:
+
+Raw
+$ ./bin/standalone.sh -Djboss.node.name=node2 -Djboss.server.base.dir=$JBOSS_HOME/node2 -c standalone.xml -b 192.0.2.20 -bmanagement 192.0.2.20
+More generic startup options:
+
+Raw
+$ ./bin/standalone.sh -Djboss.node.name=$NODENAME -Djboss.server.base.dir=$JBOSS_HOME/$NODENAME -c  $SVR_CONFIG -b $IP_ADDR  -bmanagement $MGMT_IPADDR -Djboss.socket.binding.port-offset=$PORT_OFFSET
+Note that your standalone.sh may also include a jboss.server.base.dir value and if so, you can comment this out or remove it to prevent having two different values set for the same property.
+
+Box with single IP: If your machine does not have multiple IP addresses, you need to specify the property -Djboss.socket.binding.port-offset to avoid port conflict.
+
+Additional optional configuration: You could also tailor the path for the config, data, logs, temp if you have a standardized directory requirement for them. For example, jboss.server.base.dir, jboss.server.config.dir, jboss.server.data.dir, jboss.server.deploy.dir, jboss.server.log.dir etc . See Different start-up options for JBoss EAP 6 for additional startup parameters.
+
+Using Clustering? : If you are going to use clustering with this setup, Isolating JBoss EAP 6 clusters running on the same network may be relevant
+
+RPM Installation
+rpm(yum) installation of JBoss EAP is only meant to be running One standalone or One domain set-up. It is possible to make multiple copies of directories but managing all that is complicated.
+Use domain mode if you want to have multiple instances sharing the same configuration profile. each instance can have their own server-group, JVM, etc. (making them completely separate).
+Note:
+
+
+
+        <management-interfaces>
+            <native-interface security-realm="ManagementRealm">
+                <socket interface="management" port="${jboss.management.native.port:9999}"/>
+            </native-interface>
+            <http-interface security-realm="ManagementRealm">
+                <http-upgrade enabled="true"/>
+                <socket interface="management" port="${jboss.management.http.port:9990}"/>
+            </http-interface>
+        </management-interfaces>
+    </management>
+    <domain-controller>
+        <local/>
+        <!-- Alternative remote domain controller configuration with a host and port -->
+        <!-- <remote protocol="remote" host="${jboss.domain.master.address}" port="${jboss.domain.master.port:9999}" security-realm="ManagementRealm"/> -->
+    </domain-controller>
+    <interfaces>
+        <interface name="management">
+            <inet-address value="${jboss.bind.address.management:127.0.0.1}"/>
+        </interface>
+        <interface name="public">
+            <inet-address value="${jboss.bind.address:127.0.0.1}"/>
+        </interface>
+    </interfaces>
