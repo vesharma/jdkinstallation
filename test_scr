@@ -1,0 +1,114 @@
+Move.sh
+#!/bin/sh
+
+
+Number=7
+current_date=$(date +%Y%m%d)
+past_date=$(date -d "$current_date - $Number days" +%Y-%m-%d)
+echo "$current_date\t$past_date"
+#out="`echo $USER.$HOSTAME.$now`"
+hostvar=$(hostname |awk -F'.' '{print $1}')
+Naspath="/adjhub/Logs"
+mkdir -p "$Naspath/$hostvar-$past_date"
+#Files=find /AdjHubData/Logs  -type f -name "*.log*" -mtime +7 -exec cp  "/$Naspath/$past_date" {} \;
+Files=$(find /AdjHubData/Logs  -type f -name "*.log*" -mtime +7 -exec ls -l {} \; |awk -F' ' '{print $9 }')
+for MvFiles in $Files
+do
+   mv $MvFiles $Naspath/$hostvar-$past_date/
+done
+exit
+====
+
+copy.yml
+---
+  - name:  Copy files
+    become: true
+    hosts: all
+    gather_facts: false
+    
+    tasks:
+  
+     - name: Absent existing /root/SSLCERT
+       file:
+         path: "{{ item }}"
+         state: absent
+       with_items:
+         - "/root/SSLCERT"
+   
+     - debug:
+         msg: "result.stdout"
+   
+     #- name: check directory exist
+     #  stat:
+     #    path: /root/SSLCERT
+     #    register: status
+
+     - name: Create Directory
+       file:
+         dest: /root/SSLCERT 
+         state: directory
+       #when: status.stat.exists == false
+  
+     - name: Copy files in /root/SSLCERT
+       shell:
+          cmd: cp -prv /root/SSLCERT_Master/*.cer /root/SSLCERT_Master/SSLEnv.sh /root/SSLCERT/
+       args:
+          executable: /bin/sh
+  
+     - name: Command execute
+       command: chdir=/root/SSLCERT/  {{ item }}
+       with_items:
+        - sh ./SSLEnv.sh > /root/SSLCERT/output.txt
+        
+        ---
+        
+        #!/bin/sh
+
+hostvar=$(hostname)
+javavar=${JAVA_HOME}
+datevar=$(date +%Y%m%d)
+
+Dir=/root/SSLCERT
+Keytstorename="ADJHUB_CERT.jks"
+jbossdir="/opt/jboss/domain/configuration"
+keypass="fiserv01"
+storepass="fiserv01"
+
+if [[ ! -f $jbossdir/$Keytstorename ]]
+   
+  then 
+    echo -e "cp -pv  ${jbossdir}/${Keytstorename}  ${Dir}/$Keytstorename_$datevar"
+    cp -pv cp -pv  ${jbossdir}/${Keytstorename}  ${Dir}/$Keytstorename_$datevar
+fi
+  
+
+
+keytool -genkeypair -alias $hostvar -keyalg RSA -keysize 2048 -validity 1096 -keystore $Keytstorename -dname "CN=$hostvar, OU=FTS, O=Fiserv, L=John's Creek, ST=Georgia, C=US" -keypass $keypass -storepass $storepass -noprompt
+
+keytool -export -alias $hostvar -keystore $Keytstorename -file $hostvar.cer -keypass $keypass -storepass $storepass -noprompt
+
+echo ${javavar}/jre/lib/security/cacerts
+cp -pv ${javavar}/jre/lib/security/cacerts ${javavar}/jre/lib/security/cacerts_$datevar
+cp -pv ${javavar}/jre/lib/security/cacerts .
+
+#keytool -import -keystore $jAVA_HOME/jre/lib/security/cacerts  -alias pcf-digicert_sha2_secure_server_ca -file  pcf-digicert_sha2_secure_server_ca.cer -keypass changeit -storepass changeit -noprompt
+
+ for CERTAlias in *.cer
+   do
+       echo -e "\n Cert imported \n" 
+       Aliasvar="$(basename -s .cer $CERTAlias )"
+       keytool -import -keystore $Keytstorename -alias $Aliasvar -file $CERTAlias -keypass $keypass -storepass $storepass -noprompt
+   done
+
+ Certimported=$(keytool -v -list -keystore $Keytstorename -keypass $keypass -storepass $storepass -noprompt |  grep 'Alias name:')
+ for Certsvalidation in $Certimported
+   do
+      echo -e " Cert validateion $Certsvalidation \n"
+       keytool -v -list -keystore $Keytstorename -keypass $keypass -storepass $storepass -noprompt |grep -i $Certsvalidation
+      echo -e " ************************** \n"
+   done
+ exit
+
+
+
+        
