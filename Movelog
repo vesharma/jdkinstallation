@@ -1,0 +1,202 @@
+#!/bin/sh
+
+dateRoot=$(date +'%y-%m-%d')
+datevar=$(date +'%y%m%d_%H%M%S')
+hostnamevar=$(hostname|awk -F'.' '{print $1}')
+
+JBossRootvar=/opt/jboss
+JBossStartupvar=/opt/jboss/domain/log
+JbossInstance1var=/opt/jboss/domain/servers/"$hostnamevar"_webapp/log
+JbossInstance2var=/opt/jboss/domain/servers/"$hostnamevar"_webapp_2/log
+AdjhubLogvar=/mnt/logs/adjhub
+Billingvar=/DisputeExpertJar/Billing/logs
+configurationvar=/opt/jboss/domain/configuration
+
+
+Jbosstarget=/root/Ansible_Appd/$dateRoot/$datevar/jboss/OneinDay
+Adjhubtarget=/root/Ansible_Appd/$dateRoot/$datevar/adjhub
+Billingtarget=/root/Ansible_Appd/$dateRoot/$datevar/Billing
+Configurationtarget=/root/Ansible_Appd/$dateRoot/$datevar/ConfigurationBak
+
+
+mkdir -p $Jbosstarget;
+mkdir -p $Adjhubtarget;
+mkdir -p $Billingtarget;
+mkdir -p $Configurationtarget;
+
+
+  
+   # df -H | awk '{ print $5 " " $6 }' | while read output;
+   # do
+   #     echo $output
+   #     usep=$(echo $output | awk '{ print $1}' | cut -d'%' -f1  )
+   #     partition=$(echo $output | awk '{ print $2 }' )
+   #     if [ $usep -ge 90 ]; then
+   #         echo "Running out of space \"$partition ($usep%)\" on $(hostname) as on $(date)" |
+   #         mail -s "Warning! There is no space on the disk: $usep%" ved.sharma@domain.com
+   #     fi
+   # done
+
+    JBossdestvar=$(df -H | awk '{print $5 " " $6}'|grep -i '/mnt/')
+    usepvar1=$(echo $JBossdestvar | awk '{ print $1}' | cut -d'%' -f1  )
+    if [ $usepvar1 -ge 80 ]; then
+            echo "Running out of space \"$partition ($usepvar1%)\" on $(hostname) as on $(date)" |
+            mail -s "Warning! There is no space on the disk: $usepvar1%" ved.sharma@domain.com
+    else
+    # Compress Jboss Logs in /mnt/logs
+            if grep -qs "$JbossLogvar" /proc/mounts;then
+                if [ $? -eq 0 ];then
+
+                          #1. For Jboss Root dir logs
+                          #######################################
+                           JBossRootvar=/opt/jboss/
+                           JbRoottmp=$(find $JBossRootvar/* -maxdepth 1 -not -path "*.jar" -type f \( -iname "*.log*" -o  -iname "*.hprof" \) -newermt "-365 days")
+                            for jbrootlogfile1 in $JbRoottmp
+                            do
+                               hostvar=$(hostname | awk -F'.' '{print $1 }')
+                               Filenamedirvar=$( echo $jbrootlogfile1 | awk -F'/' '{print $(NF -1)}' )
+			       Filenamevar=$( echo $jbrootlogfile1 | awk -F'/' '{print $( NF )}')
+			       Filenamevar1=$Filenamevar"_"$hostvar"_"$(date +'%y%m%d_%H%M%S').tar
+                               BaseDirvar=$(dirname "$jbrootlogfile1")
+                               cd $BaseDirvar ; tar -cvf $Jbosstarget/$Filenamevar1 $Filenamevar
+                            done
+                       
+                          #2. For Jboss domain logs
+                          #######################################
+                           JBossStartupvar=/opt/jboss/domain/log
+                           JbRoottmp=$(find $JBossStartupvar/* -maxdepth 1 -not -path "*.jar" -type f \( -iname "*.log*" \) -newermt "-5 days")
+                            for jbrootlogfile1 in $JbRoottmp
+                            do
+                               hostvar=$(hostname | awk -F'.' '{print $1 }')
+                               Filenamedirvar=$( echo $jbrootlogfile1 | awk -F'/' '{print $(NF -1)}' )
+                               Filenamevar=$( echo $jbrootlogfile1 | awk -F'/' '{print $( NF )}')
+                               Filenamevar1=$Filenamevar"_"$hostvar"_"$(date +'%y%m%d_%H%M%S').tar
+                               BaseDirvar=$(dirname "$jbrootlogfile1")
+                               cd $BaseDirvar ; tar -cvf $Jbosstarget/$Filenamevar1 $Filenamevar
+                            done
+                                      
+                          #3. For Jboss Configuration backup
+                          #######################################
+                           configurationvar=/opt/jboss/domain/configuration
+                           JbRoottmp=$(find $configurationvar/* -maxdepth 1 -not -path "*.jar" -type f \( -iname "domain.xml" -o  -iname "host.xml" \))
+                            for jbrootlogfile1 in $JbRoottmp
+                            do
+                               hostvar=$(hostname | awk -F'.' '{print $1 }')
+                               Filenamedirvar=$( echo $jbrootlogfile1 | awk -F'/' '{print $(NF -1)}' )
+                               Filenamevar=$( echo $jbrootlogfile1 | awk -F'/' '{print $( NF )}')
+                               Filenamevar1=$Filenamevar"_"$hostvar"_"$(date +'%y%m%d_%H%M%S').tar
+                               BaseDirvar=$(dirname "$jbrootlogfile1")
+                               cd $BaseDirvar ; tar -cvf $Configurationtarget/$Filenamevar1 $Filenamevar
+                            done
+
+                
+            else
+                echo -e " $JbossLogvar not mounted "
+                mail -s " $JbossLogvar not mounted: $usep%" ved.sharma@fiserv.com
+
+            fi
+    fi
+
+  fi 
+
+
+------------
+
+#!/bin/sh
+
+dateRoot=$(date +'%y-%m-%d')
+datevar=$(date +'%y%m%d_%H%M%S')
+hostnamevar=$(hostname|awk -F'.' '{print $1}')
+
+JBossRootvar=/opt/jboss
+JBossStartupvar=/opt/jboss/domain/log
+JbossInstance1var=/opt/jboss/domain/servers/"$hostnamevar"_webapp/log
+JbossInstance2var=/opt/jboss/domain/servers/"$hostnamevar"_webapp_2/log
+AdjhubLogvar=/mnt/logs/adjhub
+Billingvar=/DisputeExpertJar/Billing/logs
+configurationvar=/opt/jboss/domain/configuration
+
+
+Jbosstarget=/root/Ansible_Appd/$dateRoot/$datevar/jboss/OneinDay
+Adjhubtarget=/root/Ansible_Appd/$dateRoot/$datevar/adjhub
+Billingtarget=/root/Ansible_Appd/$dateRoot/$datevar/Billing
+Configurationtarget=/root/Ansible_Appd/$dateRoot/$datevar/ConfigurationBak
+
+
+mkdir -p $Jbosstarget;
+mkdir -p $Adjhubtarget;
+mkdir -p $Billingtarget;
+mkdir -p $Configurationtarget;
+
+
+  
+   # df -H | awk '{ print $5 " " $6 }' | while read output;
+   # do
+   #     echo $output
+   #     usep=$(echo $output | awk '{ print $1}' | cut -d'%' -f1  )
+   #     partition=$(echo $output | awk '{ print $2 }' )
+   #     if [ $usep -ge 90 ]; then
+   #         echo "Running out of space \"$partition ($usep%)\" on $(hostname) as on $(date)" |
+   #         mail -s "Warning! There is no space on the disk: $usep%" ved.sharma@domain.com
+   #     fi
+   # done
+
+    JBossdestvar=$(df -H | awk '{print $5 " " $6}'|grep -i '/mnt/')
+    usepvar1=$(echo $JBossdestvar | awk '{ print $1}' | cut -d'%' -f1  )
+    if [ $usepvar1 -ge 80 ]; then
+            echo "Running out of space \"$partition ($usepvar1%)\" on $(hostname) as on $(date)" |
+            mail -s "Warning! There is no space on the disk: $usepvar1%" ved.sharma@domain.com
+    else
+    # Compress Jboss Logs in /mnt/logs
+            if grep -qs "$JbossLogvar" /proc/mounts;then
+                if [ $? -eq 0 ];then
+
+                JbossInstance1var=/opt/jboss/domain/servers/"$hostnamevar"_webapp/log
+                    #1
+                            JbRoottmp=$(find $JbossInstance1var/* -maxdepth 1 -not -path "*.jar" -type f -name "*.log*" -newermt "-4 hours")
+                            for jbrootlogfile1 in $JbRoottmp
+                            do
+                               hostvar=$(hostname | awk -F'.' '{print $1 }')
+                               Filenamedirvar=$( echo $jbrootlogfile1 | awk -F'/' '{print $(NF -1)}' )
+			       Filenamevar=$( echo $jbrootlogfile1 | awk -F'/' '{print $( NF )}')
+			       Filenamevar1=$Filenamevar"_"$hostvar"_"$(date +'%y%m%d_%H%M%S').tar
+                               BaseDirvar=$(dirname "$jbrootlogfile1")
+                               cd $BaseDirvar ; tar -cvf $Jbosstarget/$Filenamevar1 $Filenamevar
+                            done
+                        exit
+
+                JbossInstance2var=/opt/jboss/domain/servers/"$hostnamevar"_webapp_2/log
+
+                    #2
+                            JbRoottmp=$(find $JbossInstance2var/* -maxdepth 1  -not -path "*.jar" -type f -name "*.log*" -newermt "-4 hours")
+                            for jbrootlogfile2 in $JbRoottmp
+                            do
+                               cd $Jbosstarget; tar cvzf $jbrootlogfile1.tar $jbrootlogfile2
+                            done
+
+                AdjhubLogvar=/mnt/logs/adjhub
+                    #1
+                            JbRoottmp=$(find $AdjhubLogvar/* -maxdepth 1  -not -path "*.jar" -type f -name "*.log*" -newermt "-4 hours")
+                            for Adjhubtargetfile in $JbRoottmp
+                            do
+                                cd $Adjhubtarget; tar cvzf $Adjhubtargetfile.tar $Adjhubtargetfile
+                            done
+
+                Billingvar=/DisputeExpertJar/Billing/logs
+
+                    #1
+                            JbRoottmp=$(find $Billingvar/* -maxdepth 1  -not -path "*.jar" -type f -name "*.log*" -newermt "-4 hours")
+                            for Billinglogfile1 in $JbRoottmp
+                            do
+                              cd $Billingtarget; tar cvzf $Billinglogfile1.tar $Billinglogfile1
+                            done
+
+                
+            else
+                echo -e " $JbossLogvar not mounted "
+                mail -s " $JbossLogvar not mounted: $usep%" ved.sharma@fiserv.com
+
+            fi
+    fi
+
+  fi 
